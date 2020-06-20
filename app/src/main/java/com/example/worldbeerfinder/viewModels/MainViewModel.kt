@@ -18,7 +18,7 @@ class MainViewModel: ViewModel() {
     }
 
     val page = MediatorLiveData<Int>().apply { value = DEFAULT_PAGE }
-    val perPage = MutableLiveData<Int>().apply { value = DEFAULT_PER_PAGE}
+    private val perPage = MutableLiveData<Int>().apply { value = DEFAULT_PER_PAGE}
     val keyword = MutableLiveData<String>()
 
     val beerList = MediatorLiveData<List<BeerItem>>()
@@ -41,7 +41,7 @@ class MainViewModel: ViewModel() {
         }
     }
 
-    fun loadBeerList(keyword: String, page: Int, perPage: Int) {
+    private fun loadBeerList(keyword: String, page: Int, perPage: Int) {
         viewModelScope.launch {
             BeerApi.client.create(BeerApi::class.java)
                 .findBeerList(keyword, page, perPage).enqueue(object: Callback<List<BeerApiResponse>> {

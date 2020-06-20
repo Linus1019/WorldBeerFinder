@@ -12,7 +12,7 @@ import com.example.worldbeerfinder.models.BeerItem
 import kotlinx.android.synthetic.main.beer_list_item_view.view.*
 
 class BeerListAdapter(
-    val context: Context,
+    private val context: Context,
     var beerItems: List<BeerItem?>
 ) : RecyclerView.Adapter<ViewHolder>() {
 

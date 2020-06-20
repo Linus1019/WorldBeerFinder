@@ -17,14 +17,14 @@ interface BeerApi {
     ) : Call<List<BeerApiResponse>>
 
     companion object {
-        val baseUrl = "https://api.punkapi.com/v2/"
+        private const val baseUrl = "https://api.punkapi.com/v2/"
 
         private val httpClient = OkHttpClient()
             .newBuilder()
             .addInterceptor(HttpLoggingInterceptor())
             .build()
 
-        val client = Retrofit.Builder().baseUrl(baseUrl)
+        val client: Retrofit = Retrofit.Builder().baseUrl(baseUrl)
             .addConverterFactory(GsonConverterFactory.create())
             .client(httpClient)
             .build()
