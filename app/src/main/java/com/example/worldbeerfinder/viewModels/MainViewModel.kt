@@ -17,6 +17,8 @@ class MainViewModel: ViewModel() {
         API_ERROR
     }
 
+    private var isLoading = false
+
     val page = MediatorLiveData<Int>().apply { value = DEFAULT_PAGE }
     private val perPage = MutableLiveData<Int>().apply { value = DEFAULT_PER_PAGE}
     val keyword = MutableLiveData<String>()
@@ -32,37 +34,51 @@ class MainViewModel: ViewModel() {
             page.value = DEFAULT_PAGE
         }
 
-        beerList.addSource(keyword) {
-            loadBeerList(keyword.value ?: "", page.value!!, perPage.value!!)
-        }
-
         beerList.addSource(page) {
+            if (isLoading) return@addSource
             loadBeerList(keyword.value ?: "", page.value!!, perPage.value!!)
         }
     }
 
-    private fun loadBeerList(keyword: String, page: Int, perPage: Int) {
+    fun loadBeerList(keyword: String, page: Int, perPage: Int) {
         viewModelScope.launch {
+            if (isLoading || keyword.isEmpty()) {
+                errorMessage = EMPTY_KEYWORD_ERROR_MESSAGE
+                errorCode.value = ErrorCode.EMPTY_KEYWORD
+                return@launch
+            }
+
+            isLoading = true
             BeerApi.client.create(BeerApi::class.java)
                 .findBeerList(keyword, page, perPage).enqueue(object: Callback<List<BeerApiResponse>> {
                     override fun onResponse(
                         call: Call<List<BeerApiResponse>>,
                         response: Response<List<BeerApiResponse>>
                     ) {
-                        if (response.code() == EMPTY_KEYWORD_ERROR_CODE) {
-                            errorMessage = EMPTY_KEYWORD_ERROR_MESSAGE
-                            errorCode.value = ErrorCode.EMPTY_KEYWORD
-                        }
-
                         val body = response.body()
                         val hasBody = body.isNullOrEmpty().not()
 
                         errorMessage = if (hasBody) "" else EMPTY_RESULT_ERROR_MESSAGE
                         errorCode.value = if (hasBody) ErrorCode.NONE else ErrorCode.EMPTY_RESULT
 
-                        if (beerList.value == null) {
-                            beerList.value =
-                                body?.map {
+                        if (errorCode.value != ErrorCode.NONE) {
+                            isLoading = false
+                            return
+                        }
+
+                        beerList.value = if (beerList.value == null) {
+                            body?.map {
+                                BeerItem(
+                                    it.imageUrl,
+                                    it.beerName!!,
+                                    it.firstBrewed!!,
+                                    it.tagLine!!,
+                                    it.description!!
+                                )
+                            }
+                        } else {
+                            beerList.value!!
+                                .plus(body?.map {
                                     BeerItem(
                                         it.imageUrl,
                                         it.beerName!!,
@@ -70,24 +86,16 @@ class MainViewModel: ViewModel() {
                                         it.tagLine!!,
                                         it.description!!
                                     )
-                                }
-                        } else {
-                            beerList.value =  beerList.value!!
-                                .plus(body?.map {
-                                    BeerItem(
-                                        it.imageUrl!!,
-                                        it.beerName!!,
-                                        it.firstBrewed!!,
-                                        it.tagLine!!,
-                                        it.description!!
-                                    )
                                 }!!)
                         }
+
+                        isLoading = false
                     }
 
                     override fun onFailure(call: Call<List<BeerApiResponse>>, t: Throwable) {
                         errorCode.value = ErrorCode.API_ERROR
                         errorMessage = t.message ?: ""
+                        isLoading = false
                     }
                 })
         }
@@ -96,7 +104,6 @@ class MainViewModel: ViewModel() {
     companion object {
         const val DEFAULT_PAGE = 1
         const val DEFAULT_PER_PAGE = 10
-        const val EMPTY_KEYWORD_ERROR_CODE = 400
         const val EMPTY_KEYWORD_ERROR_MESSAGE = "검색어를 입력해주세요."
         const val EMPTY_RESULT_ERROR_MESSAGE = "검색 결과가 없습니다."
     }

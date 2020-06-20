@@ -49,15 +49,15 @@ class MainActivity : AppCompatActivity() {
 
         viewModel.errorCode.observe(this, Observer { code ->
             when (code) {
-                MainViewModel.ErrorCode.EMPTY_KEYWORD,
-                MainViewModel.ErrorCode.EMPTY_RESULT,
-                MainViewModel.ErrorCode.API_ERROR -> {
-                    viewModel.beerList.value = null
-                    error_message.visibility = View.VISIBLE
-                    error_message.text = viewModel.errorMessage
+                MainViewModel.ErrorCode.NONE -> {
+                    error_message.visibility = View.GONE
+                    beer_list_view.visibility = View.VISIBLE
                 }
                 else -> {
-                    error_message.visibility = View.GONE
+                    viewModel.beerList.value = null
+                    error_message.visibility = View.VISIBLE
+                    beer_list_view.visibility = View.GONE
+                    error_message.text = viewModel.errorMessage
                 }
             }
         })
