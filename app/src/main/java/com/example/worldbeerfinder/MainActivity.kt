@@ -72,7 +72,9 @@ class MainActivity : AppCompatActivity() {
                 super.onScrolled(recyclerView, dx, dy)
 
                 val linearLayoutManager = recyclerView.layoutManager as LinearLayoutManager
-                if (linearLayoutManager.findLastCompletelyVisibleItemPosition() == viewModel.beerList.value!!.size - 1) {
+                if (viewModel.beerList.value!!.size == viewModel.page.value!! * 10 &&
+                    linearLayoutManager.findLastCompletelyVisibleItemPosition() == viewModel.beerList.value!!.size - 1
+                ) {
                     viewModel.page.value = viewModel.page.value!! + 1
                 }
             }
