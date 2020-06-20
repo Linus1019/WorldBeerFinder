@@ -65,7 +65,6 @@ class MainActivity : AppCompatActivity() {
         viewModel.keyword.observe(this, Observer {
             beer_list_view.adapter = null
             viewModel.beerList.value = null
-            viewModel.loadBeerList(it, viewModel.page.value!!, viewModel.perPage.value!!)
         })
 
         beer_list_view.addOnScrollListener(object: RecyclerView.OnScrollListener() {
@@ -74,21 +73,17 @@ class MainActivity : AppCompatActivity() {
 
                 val linearLayoutManager = recyclerView.layoutManager as LinearLayoutManager
                 if (linearLayoutManager.findLastCompletelyVisibleItemPosition() == viewModel.beerList.value!!.size - 1) {
-                    //load more
                     viewModel.page.value = viewModel.page.value!! + 1
-                    viewModel.loadBeerList(viewModel.keyword.value!!, viewModel.page.value!!, viewModel.perPage.value!!)
                 }
             }
         })
 
         btn_search.setOnClickListener {
-            if (viewModel.keyword.value != keyword_text.text.toString()) {
-                viewModel.keyword.value = keyword_text.text.toString()
+            val inputMethodManager =
+                getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
+            inputMethodManager.hideSoftInputFromWindow(keyword_text.windowToken, 0)
 
-                val inputMethodManager =
-                    getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
-                inputMethodManager.hideSoftInputFromWindow(keyword_text.windowToken, 0)
-            }
+            viewModel.keyword.value = keyword_text.text.toString()
         }
     }
 

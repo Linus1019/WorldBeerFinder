@@ -21,7 +21,7 @@ class MainViewModel: ViewModel() {
     val perPage = MutableLiveData<Int>().apply { value = DEFAULT_PER_PAGE}
     val keyword = MutableLiveData<String>()
 
-    val beerList = MutableLiveData<List<BeerItem>>()
+    val beerList = MediatorLiveData<List<BeerItem>>()
     val selectedBeerItem = MutableLiveData<BeerItem>()
 
     val errorCode = MutableLiveData<ErrorCode>()
@@ -30,6 +30,14 @@ class MainViewModel: ViewModel() {
     init {
         page.addSource(keyword) {
             page.value = DEFAULT_PAGE
+        }
+
+        beerList.addSource(keyword) {
+            loadBeerList(keyword.value ?: "", page.value!!, perPage.value!!)
+        }
+
+        beerList.addSource(page) {
+            loadBeerList(keyword.value ?: "", page.value!!, perPage.value!!)
         }
     }
 
